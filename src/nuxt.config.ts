@@ -3,6 +3,7 @@ import { defineNuxtConfig } from "nuxt/config";
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
+  ssr: true,
   srcDir: './',
   modules: ['@nuxt/content'],
   css: ['~/assets/css/main.css'],
@@ -25,16 +26,14 @@ export default defineNuxtConfig({
 
     navigation: {
       fields: ['title', 'description'],
-    }
+    },
+    documentDriven: false
   },
   postcss: {
     plugins: {
       tailwindcss: {},
       autoprefixer: {},
     },
-  },
-  routeRules: {
-    '/': { prerender: true }
   },
   compatibilityDate: '2025-01-06'
 })
