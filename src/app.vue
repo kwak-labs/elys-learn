@@ -117,6 +117,12 @@ const switchLanguage = async () => {
 }
 
 onMounted(() => {
+  // Redirect to /en/ if at root path
+  if (route.path === '/') {
+    navigateTo('/en/')
+    return
+  }
+  
   // Set initial language based on route
   const routeLang = route.path.split('/')[1]
   if (languages[routeLang]) {
@@ -130,7 +136,7 @@ const handleSearch = () => {
 }
 
 const handleLogoClick = () => {
-  navigateTo('/')
+  navigateTo('/en/')
 }
 </script>
 
