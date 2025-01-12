@@ -29,7 +29,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const comment = `🔄 Deployment is in progress for branch \`pr-${github.event.pull_request.number}\`... You will be able to view your branch's deployment here: https://pr-${github.event.pull_request.number}.elys-learn.pages.dev/`;
+            const comment = `🔄 Deployment is in progress for branch \`pr-${{github.event.pull_request.number}}\`... You will be able to view your branch's deployment here: https://pr-${{github.event.pull_request.number}}.elys-learn.pages.dev/`;
             const { data } = await github.rest.issues.createComment({
               issue_number: context.payload.pull_request.number,
               owner: context.repo.owner,
