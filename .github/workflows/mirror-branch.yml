@@ -19,7 +19,11 @@ jobs:
           git checkout -b pr-${{ github.event.pull_request.number }}
           git push origin pr-${{ github.event.pull_request.number }}
 
-      # Step 3: Post "Deployment in Progress" comment on PR
+      # Step 3: Add a delay to allow Cloudflare Pages build to initialize
+      - name: Wait for Cloudflare Build to Start
+        run: sleep 10 # Wait for 10 seconds (adjust as needed)
+
+      # Step 4: Post "Deployment in Progress" comment on PR
       - name: Post Deployment In Progress Comment
         id: post_comment
         uses: actions/github-script@v6
@@ -34,7 +38,7 @@ jobs:
             });
             core.setOutput("comment_id", data.id);
 
-      # Step 4: Wait for Cloudflare Pages deployment and fetch preview URL
+      # Step 5: Wait for Cloudflare Deployment and Fetch Preview URL with Retry Logic
       - name: Wait for Cloudflare Deployment and Fetch Preview URL
         id: fetch_preview_url
         uses: zentered/cloudflare-preview-url@v1.4.2
@@ -43,10 +47,10 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         with:
           cloudflare_project_id: elys-learn
-          branch: pr-${{ github.event.pull_request.number }}
+          branch_name: pr-${{ github.event.pull_request.number }}
           wait_until_ready: true
 
-      # Step 5: Update PR comment with Preview URL
+      # Step 6: Update PR comment with Preview URL
       - name: Update Comment with Preview URL
         if: success()
         uses: actions/github-script@v6
@@ -54,6 +58,20 @@ jobs:
           script: |
             const url = `https://${{ steps.fetch_preview_url.outputs.preview_url }}`;
             const updatedComment = `🚀 **Cloudflare Pages Preview:** [View Deployment](${url})`;
+            github.rest.issues.updateComment({
+              comment_id: ${{ steps.post_comment.outputs.comment_id }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: updatedComment,
+            });
+
+      # Step 7 (Optional): Handle Timeout or Failure Gracefully
+      - name: Handle Timeout or Failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const updatedComment = `❌ **Deployment Failed:** Unable to fetch preview URL. Please check the Cloudflare Pages dashboard for details.`;
             github.rest.issues.updateComment({
               comment_id: ${{ steps.post_comment.outputs.comment_id }},
               owner: context.repo.owner,
