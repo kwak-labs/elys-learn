@@ -13,10 +13,13 @@ jobs:
         uses: actions/checkout@v3
 
       # Step 2: Create mirrored branch
-      - name: Create mirrored branch
+      - name: Fetch and Create Mirrored Branch
         run: |
-          git fetch origin ${{ github.event.pull_request.head.ref }}
-          git checkout -b pr-${{ github.event.pull_request.number }}
+          # Fetch the pull request directly using its ID
+          git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-${{ github.event.pull_request.number }}
+          # Checkout the mirrored branch
+          git checkout pr-${{ github.event.pull_request.number }}
+          # Push the mirrored branch to the repository
           git push origin pr-${{ github.event.pull_request.number }}
 
       # Step 3: Add a delay to allow Cloudflare Pages build to initialize
