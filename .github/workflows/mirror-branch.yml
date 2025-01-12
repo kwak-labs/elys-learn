@@ -1,16 +1,61 @@
 name: Mirror Forked PR for Preview
+
 on:
   pull_request_target:
     types: [opened, synchronize]
+
 jobs:
   mirror-branch:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Create mirrored branch
       - name: Create mirrored branch
         run: |
           git fetch origin ${{ github.event.pull_request.head.ref }}
           git checkout -b pr-${{ github.event.pull_request.number }}
           git push origin pr-${{ github.event.pull_request.number }}
+
+      # Step 3: Post "Deployment in Progress" comment on PR
+      - name: Post Deployment In Progress Comment
+        id: post_comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const comment = `🔄 Deployment is in progress for branch \`pr-${{ github.event.pull_request.number }}\`... Please wait for the preview link.`;
+            const { data } = await github.rest.issues.createComment({
+              issue_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });
+            core.setOutput("comment_id", data.id);
+
+      # Step 4: Wait for Cloudflare Pages deployment and fetch preview URL
+      - name: Wait for Cloudflare Deployment and Fetch Preview URL
+        id: fetch_preview_url
+        uses: zentered/cloudflare-preview-url@v1.4.2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        with:
+          cloudflare_project_id: YOUR_PROJECT_NAME
+          branch_name: pr-${{ github.event.pull_request.number }}
+          wait_until_ready: true
+
+      # Step 5: Update PR comment with Preview URL
+      - name: Update Comment with Preview URL
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const url = `https://${{ steps.fetch_preview_url.outputs.preview_url }}`;
+            const updatedComment = `🚀 **Cloudflare Pages Preview:** [View Deployment](${url})`;
+            github.rest.issues.updateComment({
+              comment_id: ${{ steps.post_comment.outputs.comment_id }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: updatedComment,
+            });
