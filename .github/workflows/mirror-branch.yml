@@ -41,6 +41,21 @@ jobs:
             });
             core.setOutput("comment_id", data.id);
 
+      - name: Fetch and Parse Deployment URL
+        run: |
+          response=$(curl -s -X GET "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/elys-learn/deployments" \
+          -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          -H "Content-Type: application/json")
+          echo "Raw Response: $response"
+          preview_url=$(echo "$response" | jq -r '.result[] | select(.deployment_trigger.metadata.branch == "pr-${{ github.event.pull_request.number }}") | .url')
+          if [[ -z "$preview_url" ]]; then
+            echo "No matching deployment found."
+            exit 1
+          fi
+          echo "Preview URL: $preview_url"
+
+
+
       # Step 5: Wait for Cloudflare Deployment and Fetch Preview URL with Retry Logic
       - name: Wait for Cloudflare Deployment and Fetch Preview URL
         id: fetch_preview_url
