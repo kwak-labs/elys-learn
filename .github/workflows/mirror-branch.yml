@@ -47,7 +47,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         with:
           cloudflare_project_id: elys-learn
-          branch_name: pr-${{ github.event.pull_request.number }}
+          branch: pr-${{ github.event.pull_request.number }}
           wait_until_ready: true
 
       # Step 6: Update PR comment with Preview URL
