@@ -1,11 +1,20 @@
 name: Cleanup Mirrored Branch
+
 on:
   pull_request:
     types: [closed]
+
 jobs:
   delete-branch:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch full history to ensure all branches are available
+
+      # Step 2: Delete the mirrored branch
       - name: Delete mirrored branch
         run: |
           git push origin --delete pr-${{ github.event.pull_request.number }}
