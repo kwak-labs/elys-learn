@@ -1,0 +1,11 @@
+name: Cleanup Mirrored Branch
+on:
+  pull_request:
+    types: [closed]
+jobs:
+  delete-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete mirrored branch
+        run: |
+          git push origin --delete pr-${{ github.event.pull_request.number }}
