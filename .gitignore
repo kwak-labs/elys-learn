@@ -1,0 +1,9 @@
+src/node_modules
+src/*.log*
+src/.nuxt
+src/.nitro
+src/.cache
+src/.output
+src/.data
+src/.env
+src/dist
